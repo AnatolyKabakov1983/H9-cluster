@@ -45,6 +45,9 @@ public final class BootReceiver extends BroadcastReceiver {
                         "attempt", String.valueOf(attempt),
                         "launched", String.valueOf(launched));
                 if (launched || attempt >= MAX_ATTEMPTS) {
+                    // Widgets on the main display resume their 1 Hz updates
+                    // even when the cluster itself stays on the stock skin.
+                    ClusterWidgetService.ensureStarted(applicationContext);
                     pendingResult.finish();
                     return;
                 }

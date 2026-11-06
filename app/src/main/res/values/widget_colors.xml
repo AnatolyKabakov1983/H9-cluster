@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dark cluster palette for the main-display widgets. -->
+<resources>
+    <color name="widget_background_solid">#EE0E1116</color>
+    <color name="widget_stroke">#26303C</color>
+    <color name="widget_text_primary">#F2F5F9</color>
+    <color name="widget_text_secondary">#97A1AF</color>
+    <color name="widget_accent_orange">#FF8A3D</color>
+    <color name="widget_warning_yellow">#FFD34D</color>
+    <color name="widget_critical_red">#FF5252</color>
+    <color name="widget_bar_track">#2A323D</color>
+</resources>

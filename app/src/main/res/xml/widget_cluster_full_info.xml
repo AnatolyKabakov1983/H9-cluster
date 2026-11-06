@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Full 4×4 widget descriptor; updates come from the data service. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="250dp"
+    android:minHeight="280dp"
+    android:minResizeWidth="180dp"
+    android:minResizeHeight="220dp"
+    android:updatePeriodMillis="0"
+    android:initialLayout="@layout/widget_cluster_full"
+    android:resizeMode="horizontal|vertical"
+    android:widgetCategory="home_screen" />

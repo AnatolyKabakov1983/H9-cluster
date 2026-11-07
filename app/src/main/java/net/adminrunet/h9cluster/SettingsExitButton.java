@@ -6,9 +6,9 @@ package net.adminrunet.h9cluster;
  * its own settings button.
  */
 public final class SettingsExitButton {
-    public static final float LEFT = 360.0f;
+    public static final float LEFT = 490.0f;
     public static final float TOP = 466.0f;
-    public static final float RIGHT = 600.0f;
+    public static final float RIGHT = 690.0f;
     public static final float BOTTOM = 510.0f;
 
     private SettingsExitButton() {

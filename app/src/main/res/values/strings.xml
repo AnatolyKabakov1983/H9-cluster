@@ -2,10 +2,13 @@
 <resources>
     <string name="app_name">H9 Cluster</string>
 
-    <!-- Main-display widgets -->
+    <!-- Main-display widgets and the floating main-screen panel -->
     <string name="widget_compact_label">H9 Cluster · 4×2</string>
     <string name="widget_full_label">H9 Cluster · 4×4</string>
     <string name="widget_service_channel_name">Виджет H9 Cluster</string>
-    <string name="widget_service_channel_description">Постоянный канал сервиса, который передаёт автомобильные данные в виджет</string>
-    <string name="widget_service_notification">Передача автомобильных данных в виджет на основном экране</string>
+    <string name="widget_service_channel_description">Постоянный канал сервиса, который передаёт автомобильные данные в виджет и панель на основном экране</string>
+    <string name="widget_service_notification">Передача автомобильных данных в виджет и панель на основном экране</string>
+    <string name="panel_notification_show">Показать панель на экране</string>
+    <string name="panel_notification_hide">Скрыть панель</string>
+    <string name="panel_permission_missing">Выдайте H9 Cluster разрешение «поверх других окон» в настройках Android или командой: adb shell appops set net.adminrunet.h9cluster SYSTEM_ALERT_WINDOW allow</string>
 </resources>

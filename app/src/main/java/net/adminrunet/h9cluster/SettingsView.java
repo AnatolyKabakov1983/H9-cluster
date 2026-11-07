@@ -67,6 +67,8 @@ public final class SettingsView extends View {
 
         void onSaveRequested(SkinSettingsSession.Snapshot draft);
 
+        void onPanelToggleRequested();
+
         void onCheckForUpdatesRequested();
 
         void onSendLogsRequested();
@@ -170,6 +172,7 @@ public final class SettingsView extends View {
                 false);
 
         drawExitButton(canvas);
+        drawPanelButton(canvas);
         if (logsEnabled()) {
             drawLogButton(canvas);
         }
@@ -204,10 +207,33 @@ public final class SettingsView extends View {
         drawCenteredText(
                 canvas,
                 "Выйти из приложения",
-                480.0f,
+                (SettingsExitButton.LEFT + SettingsExitButton.RIGHT) * 0.5f,
                 SettingsExitButton.TOP + 29.0f,
                 17.0f,
                 COLOR_DANGER,
+                true);
+    }
+
+    private void drawPanelButton(Canvas canvas) {
+        boolean panelVisible = ClusterPanelPreferences.isVisible(getContext());
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(2.0f);
+        paint.setColor(COLOR_ACCENT);
+        canvas.drawRoundRect(
+                SettingsPanelButton.LEFT,
+                SettingsPanelButton.TOP,
+                SettingsPanelButton.RIGHT,
+                SettingsPanelButton.BOTTOM,
+                12.0f,
+                12.0f,
+                paint);
+        drawCenteredText(
+                canvas,
+                panelVisible ? "Скрыть панель" : "Показать панель",
+                (SettingsPanelButton.LEFT + SettingsPanelButton.RIGHT) * 0.5f,
+                SettingsPanelButton.TOP + 29.0f,
+                16.0f,
+                COLOR_ACCENT,
                 true);
     }
 
@@ -457,6 +483,10 @@ public final class SettingsView extends View {
             confirmExit();
             return true;
         }
+        if (SettingsPanelButton.contains(x, y)) {
+            listener.onPanelToggleRequested();
+            return true;
+        }
         if (logsEnabled() && SettingsLogButton.contains(x, y)) {
             listener.onSendLogsRequested();
             return true;
@@ -641,6 +671,11 @@ public final class SettingsView extends View {
 
     void showLogUploadStarted(String machineId) {
         status = "Отправляем журнал за 24 часа · " + machineId;
+        invalidate();
+    }
+
+    void showPanelStatus(String message) {
+        status = message;
         invalidate();
     }
 

@@ -23,8 +23,8 @@ public final class SettingsUpdateButtonTest {
 
     @Test
     public void aTapOutsideTheButtonIsIgnored() {
-        assertFalse(SettingsUpdateButton.contains(639.0f, 488.0f));
-        assertFalse(SettingsUpdateButton.contains(901.0f, 488.0f));
+        assertFalse(SettingsUpdateButton.contains(729.0f, 488.0f));
+        assertFalse(SettingsUpdateButton.contains(931.0f, 488.0f));
         assertFalse(SettingsUpdateButton.contains(770.0f, 465.0f));
         assertFalse(SettingsUpdateButton.contains(770.0f, 511.0f));
     }

@@ -13,7 +13,7 @@ import android.widget.RemoteViews;
  * <p>RemoteViews layouts only accept framework views, so every value is a
  * TextView string and the single gauge is a horizontal ProgressBar. Colors
  * follow the dark cluster style: white numbers, muted labels, orange accent,
- * ATF warning bands identical to the cluster cards.</p>
+ * low battery and low fuel in red.</p>
  */
 final class ClusterWidgetViews {
     private ClusterWidgetViews() {
@@ -72,10 +72,14 @@ final class ClusterWidgetViews {
         views.setInt(R.id.widget_fuel_bar, "setSecondaryProgress", 0);
         views.setTextViewText(R.id.widget_range, content.rangeText);
         views.setTextViewText(R.id.widget_coolant, content.coolantText);
-        views.setTextViewText(R.id.widget_atf, content.atfText);
+        views.setTextViewText(
+                R.id.widget_battery,
+                content.batteryPercentText);
         views.setTextColor(
-                R.id.widget_atf,
-                atfColor(context, content.atfLevel));
+                R.id.widget_battery,
+                content.batteryLow
+                        ? context.getColor(R.color.widget_critical_red)
+                        : context.getColor(R.color.widget_text_primary));
         views.setTextViewText(R.id.widget_voltage, content.voltageText);
         views.setTextColor(
                 R.id.widget_fuel_liters,
@@ -122,22 +126,6 @@ final class ClusterWidgetViews {
                     content.wheelSpeedsText);
         }
         return views;
-    }
-
-    private static int atfColor(
-            Context context,
-            TransmissionTemperatureAlert.Level level) {
-        switch (level) {
-            case ELEVATED:
-                return context.getColor(R.color.widget_warning_yellow);
-            case HOT:
-                return context.getColor(R.color.widget_accent_orange);
-            case CRITICAL:
-                return context.getColor(R.color.widget_critical_red);
-            case NORMAL:
-            default:
-                return context.getColor(R.color.widget_text_primary);
-        }
     }
 
     private static PendingIntent settingsPendingIntent(Context context) {

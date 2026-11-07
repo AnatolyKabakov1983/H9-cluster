@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Compact 4×2 widget: speed, gear, RPM, fuel, range, coolant, ATF, voltage. -->
+<!-- Compact 4×2 widget: speed, gear, RPM, fuel, range, coolant, battery, voltage. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
@@ -203,12 +203,12 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="sans-serif-condensed"
-                    android:text="АКПП"
+                    android:text="АКБ, %"
                     android:textColor="@color/widget_text_secondary"
                     android:textSize="9sp" />
 
                 <TextView
-                    android:id="@+id/widget_atf"
+                    android:id="@+id/widget_battery"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"

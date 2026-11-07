@@ -3,6 +3,7 @@ package net.adminrunet.h9cluster;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
@@ -18,14 +19,15 @@ import androidx.core.app.NotificationCompat;
 import net.adminrunet.h9cluster.skins.SpeedDisplayMode;
 
 /**
- * Foreground source of vehicle data for the main-display widgets.
+ * Foreground source of vehicle data for the main display.
  *
  * <p>The service owns its own read-only {@link ClusterDataSource}, keeps the
  * latest {@link ClusterState} in {@link ClusterWidgetDataStore} and pushes a
- * formatted payload into every bound widget once per second. Running in the
- * foreground is what keeps the one-second cadence alive while the launcher is
- * visible; a plain background service would be frozen by Android after a few
- * minutes. When the last widget disappears the system stops the service and
+ * formatted payload once per second into every bound AppWidget and into the
+ * floating main-screen panel. Running in the foreground is what keeps the
+ * one-second cadence alive while the launcher is visible; a plain background
+ * service would be frozen by Android after a few minutes. When the last
+ * widget disappears and the panel is off, the system stops the service and
  * vehicle reading stops with it.</p>
  *
  * <p>Demo builds use {@link DemoClusterDataSource}: the widget animates with
@@ -36,9 +38,16 @@ public final class ClusterWidgetService extends Service {
     private static final int NOTIFICATION_ID = 41;
     private static final long PUBLISH_PERIOD_MS = 1_000L;
 
+    /** Toggles the floating panel over the factory main screen. */
+    public static final String ACTION_SHOW_PANEL =
+            "net.adminrunet.h9cluster.action.SHOW_PANEL";
+    public static final String ACTION_HIDE_PANEL =
+            "net.adminrunet.h9cluster.action.HIDE_PANEL";
+
+    private static final int REQUEST_SHOW_PANEL = 1;
+    private static final int REQUEST_HIDE_PANEL = 2;
+
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private final TransmissionTemperatureAlert atfAlert =
-            new TransmissionTemperatureAlert();
     private ClusterDataSource dataSource;
     private boolean dataSourceStarted;
     private ClusterWidgetContent lastPublishedContent;
@@ -74,6 +83,12 @@ public final class ClusterWidgetService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         startForeground(NOTIFICATION_ID, buildNotification());
+        String action = intent == null ? null : intent.getAction();
+        if (ACTION_HIDE_PANEL.equals(action)) {
+            hidePanel();
+        } else if (ACTION_SHOW_PANEL.equals(action)) {
+            showPanel();
+        }
         if (!dataSourceStarted) {
             dataSourceStarted = true;
             dataSource.start(dataSourceListener);
@@ -103,19 +118,32 @@ public final class ClusterWidgetService extends Service {
         super.onDestroy();
     }
 
+    private void showPanel() {
+        if (ClusterMainPanelWindow.show(this)) {
+            ClusterPanelPreferences.setVisible(this, true);
+        } else {
+            ClusterMainPanelWindow.toastPermissionMissing(this);
+            ClusterPanelPreferences.setVisible(this, false);
+            // The service may have been started only for this request; do
+            // not keep reading vehicle data when nothing displays it.
+            stopIfUnused(this);
+        }
+    }
+
+    private void hidePanel() {
+        ClusterMainPanelWindow.hide(this);
+        ClusterPanelPreferences.setVisible(this, false);
+        stopIfUnused(this);
+    }
+
     private void publish() {
         long nowMs = SystemClock.elapsedRealtime();
         ClusterState state = ClusterWidgetDataStore.latest();
-        TransmissionTemperatureAlert.Level atfLevel = atfAlert.update(
-                state.transmissionTemperatureC,
-                ClusterWidgetFormatter.hasFreshTransmissionTemperature(
-                        state,
-                        nowMs));
         ClusterWidgetContent content = ClusterWidgetFormatter.build(
                 state,
                 SkinPreferences.getSpeedDisplayMode(this),
                 SkinPreferences.getFuelTankCapacityLiters(this),
-                atfLevel,
+                BatteryChargeReader.readPercent(this),
                 nowMs);
         if (!ClusterWidgetUpdatePolicy.shouldPublish(
                 nowMs,
@@ -126,6 +154,7 @@ public final class ClusterWidgetService extends Service {
         lastPublishAtMs = nowMs;
         lastPublishedContent = content;
         ClusterWidgetViews.pushAll(this, content);
+        ClusterMainPanelWindow.update(content);
     }
 
     private void createNotificationChannel() {
@@ -153,7 +182,22 @@ public final class ClusterWidgetService extends Service {
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
                 .setOngoing(true)
                 .setShowWhen(false)
+                .addAction(0, getString(R.string.panel_notification_show),
+                        panelPendingIntent(ACTION_SHOW_PANEL, REQUEST_SHOW_PANEL))
+                .addAction(0, getString(R.string.panel_notification_hide),
+                        panelPendingIntent(ACTION_HIDE_PANEL, REQUEST_HIDE_PANEL))
                 .build();
+    }
+
+    private PendingIntent panelPendingIntent(String action, int requestCode) {
+        Intent intent = new Intent(this, ClusterWidgetService.class);
+        intent.setAction(action);
+        return PendingIntent.getService(
+                this,
+                requestCode,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+                        | PendingIntent.FLAG_IMMUTABLE);
     }
 
     /** Starts the service only when at least one widget is bound. */
@@ -164,9 +208,23 @@ public final class ClusterWidgetService extends Service {
         }
     }
 
-    /** Stops reading vehicle data when no widget of any size remains. */
+    /**
+     * Restores the panel after boot when it was on screen before shutdown.
+     * Called from {@link BootReceiver} next to the widget restore.
+     */
+    static void restorePanelAfterBoot(Context context) {
+        if (ClusterPanelPreferences.isVisible(context)) {
+            Intent intent = new Intent(context, ClusterWidgetService.class);
+            intent.setAction(ACTION_SHOW_PANEL);
+            context.startForegroundService(intent);
+        }
+    }
+
+    /** Stops reading vehicle data when no widget and no panel remains. */
     static void stopIfUnused(Context context) {
-        if (!hasBoundWidgets(context)) {
+        if (!hasBoundWidgets(context)
+                && !ClusterPanelPreferences.isVisible(context)
+                && !ClusterMainPanelWindow.isVisible()) {
             context.stopService(
                     new Intent(context, ClusterWidgetService.class));
         }

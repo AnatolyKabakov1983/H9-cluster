@@ -235,12 +235,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-condensed"
-                android:text="АКПП"
+                android:text="АКБ, %"
                 android:textColor="@color/widget_text_secondary"
                 android:textSize="8sp" />
 
             <TextView
-                android:id="@+id/widget_atf"
+                android:id="@+id/widget_battery"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="1dp"

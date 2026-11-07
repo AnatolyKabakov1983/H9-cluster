@@ -57,7 +57,7 @@ abstract class ClusterWidgetProvider extends AppWidgetProvider {
                 ClusterWidgetDataStore.latest(),
                 SkinPreferences.getSpeedDisplayMode(context),
                 SkinPreferences.getFuelTankCapacityLiters(context),
-                TransmissionTemperatureAlert.Level.NORMAL,
+                BatteryChargeReader.readPercent(context),
                 nowMs);
         return ClusterWidgetViews.build(context, providerClass(), content);
     }

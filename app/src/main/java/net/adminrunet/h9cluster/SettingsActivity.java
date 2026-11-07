@@ -3,6 +3,7 @@ package net.adminrunet.h9cluster;
 import net.adminrunet.h9cluster.skins.SkinSettings;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Window;
@@ -82,6 +83,11 @@ public final class SettingsActivity extends Activity {
                                 ClusterLauncher.applyOnClusterDisplay(
                                         SettingsActivity.this);
                         settingsView.showSaveResult(launched);
+                    }
+
+                    @Override
+                    public void onPanelToggleRequested() {
+                        toggleMainScreenPanel();
                     }
 
                     @Override
@@ -180,6 +186,41 @@ public final class SettingsActivity extends Activity {
             unsavedPreviewActive = false;
             ClusterLauncher.applyOnClusterDisplay(this);
         }
+    }
+
+    /**
+     * Shows or hides the floating panel over the factory main screen. The
+     * panel is the head-unit replacement for the standard widget: the GWM
+     * launcher offers no AppWidget picker, so the panel is started from here
+     * and later toggled from the service notification.
+     */
+    private void toggleMainScreenPanel() {
+        boolean panelRequested = ClusterPanelPreferences.isVisible(this)
+                || ClusterMainPanelWindow.isVisible();
+        if (panelRequested) {
+            startPanelService(ClusterWidgetService.ACTION_HIDE_PANEL);
+            settingsView.showPanelStatus(
+                    "Панель скрыта. Вернуть её можно здесь или в уведомлении");
+            return;
+        }
+        if (!ClusterMainPanelWindow.canShow(this)) {
+            settingsView.showPanelStatus(
+                    "Разрешите «поверх других окон» в настройках Android"
+                            + " или командой: adb shell appops set "
+                            + getPackageName()
+                            + " SYSTEM_ALERT_WINDOW allow");
+            return;
+        }
+        startPanelService(ClusterWidgetService.ACTION_SHOW_PANEL);
+        settingsView.showPanelStatus(
+                "Панель запущена поверх главного экрана;"
+                        + " её можно перетащить в удобное место");
+    }
+
+    private void startPanelService(String action) {
+        Intent intent = new Intent(this, ClusterWidgetService.class);
+        intent.setAction(action);
+        startForegroundService(intent);
     }
 
     /**

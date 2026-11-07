@@ -13,7 +13,7 @@ public final class SettingsExitButtonTest {
 
     @Test
     public void aTapInsideTheButtonCounts() {
-        assertTrue(SettingsExitButton.contains(480.0f, 488.0f));
+        assertTrue(SettingsExitButton.contains(590.0f, 488.0f));
         assertTrue(SettingsExitButton.contains(
                 SettingsExitButton.LEFT,
                 SettingsExitButton.TOP));
@@ -26,8 +26,8 @@ public final class SettingsExitButtonTest {
     public void aTapOutsideTheButtonIsIgnored() {
         assertFalse(SettingsExitButton.contains(480.0f, 400.0f));
         assertFalse(SettingsExitButton.contains(200.0f, 488.0f));
-        assertFalse(SettingsExitButton.contains(700.0f, 488.0f));
-        assertFalse(SettingsExitButton.contains(480.0f, 530.0f));
+        assertFalse(SettingsExitButton.contains(720.0f, 488.0f));
+        assertFalse(SettingsExitButton.contains(590.0f, 530.0f));
     }
 
     @Test

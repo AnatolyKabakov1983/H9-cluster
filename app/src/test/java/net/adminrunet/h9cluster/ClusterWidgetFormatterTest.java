@@ -91,9 +91,21 @@ public final class ClusterWidgetFormatterTest {
     private static ClusterWidgetContent build(
             ClusterState state,
             SpeedDisplayMode mode,
+            int tankCapacity) {
+        return ClusterWidgetFormatter.build(state, mode, tankCapacity, 72, NOW_MS);
+    }
+
+    private static ClusterWidgetContent build(
+            ClusterState state,
+            SpeedDisplayMode mode,
             int tankCapacity,
-            TransmissionTemperatureAlert.Level atfLevel) {
-        return ClusterWidgetFormatter.build(state, mode, tankCapacity, atfLevel, NOW_MS);
+            int batteryPercent) {
+        return ClusterWidgetFormatter.build(
+                state,
+                mode,
+                tankCapacity,
+                batteryPercent,
+                NOW_MS);
     }
 
     @Test
@@ -101,18 +113,15 @@ public final class ClusterWidgetFormatterTest {
         assertEquals("60", build(
                 state(60, GearSelector.DRIVE, 3),
                 SpeedDisplayMode.REAL,
-                80,
-                TransmissionTemperatureAlert.Level.NORMAL).speedText);
+                80).speedText);
         assertEquals("63", build(
                 state(60, GearSelector.DRIVE, 3),
                 SpeedDisplayMode.FACTORY_PLUS_4_5_PERCENT,
-                80,
-                TransmissionTemperatureAlert.Level.NORMAL).speedText);
+                80).speedText);
         assertEquals("35", build(
                 state(30, GearSelector.DRIVE, 3),
                 SpeedDisplayMode.FACTORY_PLUS_5_KPH,
-                80,
-                TransmissionTemperatureAlert.Level.NORMAL).speedText);
+                80).speedText);
     }
 
     @Test
@@ -121,8 +130,7 @@ public final class ClusterWidgetFormatterTest {
         assertEquals(DASH, build(
                 unavailable,
                 SpeedDisplayMode.REAL,
-                80,
-                TransmissionTemperatureAlert.Level.NORMAL).speedText);
+                80).speedText);
     }
 
     @Test
@@ -137,8 +145,7 @@ public final class ClusterWidgetFormatterTest {
         assertEquals("0", build(
                 remoteStart,
                 SpeedDisplayMode.REAL,
-                80,
-                TransmissionTemperatureAlert.Level.NORMAL).speedText);
+                80).speedText);
 
         ClusterState staleEvidence = state(-1, GearSelector.DRIVE, 3)
                 .withTboxVehicleState(
@@ -150,8 +157,7 @@ public final class ClusterWidgetFormatterTest {
         assertEquals(DASH, build(
                 staleEvidence,
                 SpeedDisplayMode.REAL,
-                80,
-                TransmissionTemperatureAlert.Level.NORMAL).speedText);
+                80).speedText);
     }
 
     @Test
@@ -159,23 +165,19 @@ public final class ClusterWidgetFormatterTest {
         assertEquals("P", build(
                 state(0, GearSelector.PARK, 0),
                 SpeedDisplayMode.REAL,
-                80,
-                TransmissionTemperatureAlert.Level.NORMAL).gearText);
+                80).gearText);
         assertEquals("D3", build(
                 state(60, GearSelector.DRIVE, 3),
                 SpeedDisplayMode.REAL,
-                80,
-                TransmissionTemperatureAlert.Level.NORMAL).gearText);
+                80).gearText);
         assertEquals("M2", build(
                 state(40, GearSelector.MANUAL, 2),
                 SpeedDisplayMode.REAL,
-                80,
-                TransmissionTemperatureAlert.Level.NORMAL).gearText);
+                80).gearText);
         assertEquals(DASH, build(
                 state(0, GearSelector.UNKNOWN, 0),
                 SpeedDisplayMode.REAL,
-                80,
-                TransmissionTemperatureAlert.Level.NORMAL).gearText);
+                80).gearText);
     }
 
     @Test
@@ -183,8 +185,7 @@ public final class ClusterWidgetFormatterTest {
         ClusterWidgetContent content = build(
                 state(0, GearSelector.PARK, 0),
                 SpeedDisplayMode.REAL,
-                40,
-                TransmissionTemperatureAlert.Level.NORMAL);
+                40);
         // The source snapshot carries 40 L on the 80-liter basis; a 40-liter
         // tank keeps the same percentage but halves the displayed liters.
         assertEquals("20 L", content.fuelLitersText);
@@ -205,47 +206,62 @@ public final class ClusterWidgetFormatterTest {
         ClusterWidgetContent content = build(
                 low,
                 SpeedDisplayMode.REAL,
-                80,
-                TransmissionTemperatureAlert.Level.NORMAL);
+                80);
         assertEquals("10 L", content.fuelLitersText);
         assertEquals("13", content.fuelPercentText);
         assertTrue(content.fuelLow);
     }
 
     @Test
-    public void atfShowsDashAfterTheFifteenSecondWindow() {
-        ClusterState fresh = new ClusterState(
-                0, 800, 0, GearSelector.PARK, 40, 75.4f,
-                40.0f, 300, 0.0, 0.0f, 0.0f,
-                2.3f, 2.3f, 2.3f, 2.3f,
-                Float.NaN, 8.5f, Float.NaN, 12.4f, 18.0f, 0.0f,
-                0f, 0f, 0f, 0f, 0f,
-                0L, 0L, 0L, 0L, NOW_MS - 1_000L, "ECO");
-        assertEquals("75 °C", build(
-                fresh,
+    public void batteryShowsThePercentDigits() {
+        assertEquals("72", build(
+                state(0, GearSelector.PARK, 0),
                 SpeedDisplayMode.REAL,
                 80,
-                TransmissionTemperatureAlert.Level.ELEVATED).atfText);
-        assertEquals(
-                TransmissionTemperatureAlert.Level.ELEVATED,
-                build(
-                        fresh,
-                        SpeedDisplayMode.REAL,
-                        80,
-                        TransmissionTemperatureAlert.Level.ELEVATED).atfLevel);
+                72).batteryPercentText);
+        assertEquals("0", build(
+                state(0, GearSelector.PARK, 0),
+                SpeedDisplayMode.REAL,
+                80,
+                0).batteryPercentText);
+        assertEquals("100", build(
+                state(0, GearSelector.PARK, 0),
+                SpeedDisplayMode.REAL,
+                80,
+                100).batteryPercentText);
+    }
 
-        ClusterState stale = new ClusterState(
-                0, 800, 0, GearSelector.PARK, 40, 75.4f,
-                40.0f, 300, 0.0, 0.0f, 0.0f,
-                2.3f, 2.3f, 2.3f, 2.3f,
-                Float.NaN, 8.5f, Float.NaN, 12.4f, 18.0f, 0.0f,
-                0f, 0f, 0f, 0f, 0f,
-                0L, 0L, 0L, 0L, NOW_MS - 20_000L, "ECO");
+    @Test
+    public void batteryShowsDashWhenThePlatformReportsNoLevel() {
         assertEquals(DASH, build(
-                stale,
+                state(0, GearSelector.PARK, 0),
                 SpeedDisplayMode.REAL,
                 80,
-                TransmissionTemperatureAlert.Level.NORMAL).atfText);
+                -1).batteryPercentText);
+        assertEquals(DASH, build(
+                state(0, GearSelector.PARK, 0),
+                SpeedDisplayMode.REAL,
+                80,
+                101).batteryPercentText);
+    }
+
+    @Test
+    public void batteryMarksLowCharge() {
+        assertTrue(build(
+                state(0, GearSelector.PARK, 0),
+                SpeedDisplayMode.REAL,
+                80,
+                20).batteryLow);
+        assertFalse(build(
+                state(0, GearSelector.PARK, 0),
+                SpeedDisplayMode.REAL,
+                80,
+                21).batteryLow);
+        assertFalse(build(
+                state(0, GearSelector.PARK, 0),
+                SpeedDisplayMode.REAL,
+                80,
+                -1).batteryLow);
     }
 
     @Test
@@ -253,8 +269,7 @@ public final class ClusterWidgetFormatterTest {
         ClusterWidgetContent content = build(
                 state(60, GearSelector.DRIVE, 3),
                 SpeedDisplayMode.REAL,
-                80,
-                TransmissionTemperatureAlert.Level.NORMAL);
+                80);
         assertEquals("92 °C", content.coolantText);
         assertEquals("18 °C", content.outsideText);
         assertEquals("12.4 V", content.voltageText);
@@ -278,13 +293,11 @@ public final class ClusterWidgetFormatterTest {
         assertEquals(DASH, build(
                 state(60, GearSelector.DRIVE, 3),
                 SpeedDisplayMode.REAL,
-                80,
-                TransmissionTemperatureAlert.Level.NORMAL).instantConsumptionText);
+                80).instantConsumptionText);
         assertEquals(DASH, build(
                 state(60, GearSelector.DRIVE, 3),
                 SpeedDisplayMode.REAL,
-                80,
-                TransmissionTemperatureAlert.Level.NORMAL).averageConsumptionText);
+                80).averageConsumptionText);
     }
 
     @Test
@@ -293,14 +306,13 @@ public final class ClusterWidgetFormatterTest {
                 ClusterState.empty(),
                 null,
                 FuelTankCapacity.DEFAULT_LITERS,
-                null,
+                -1,
                 NOW_MS);
         assertEquals("0", content.speedText);
         assertEquals(DASH, content.gearText);
         assertEquals(DASH, content.instantConsumptionText);
-        assertEquals(
-                TransmissionTemperatureAlert.Level.NORMAL,
-                content.atfLevel);
+        assertEquals(DASH, content.batteryPercentText);
+        assertFalse(content.batteryLow);
     }
 
     @Test
@@ -309,21 +321,25 @@ public final class ClusterWidgetFormatterTest {
         ClusterWidgetContent one = build(
                 first,
                 SpeedDisplayMode.REAL,
-                80,
-                TransmissionTemperatureAlert.Level.NORMAL);
+                80);
         ClusterWidgetContent two = build(
                 first,
                 SpeedDisplayMode.REAL,
-                80,
-                TransmissionTemperatureAlert.Level.NORMAL);
+                80);
         assertEquals(one, two);
         assertEquals(one.hashCode(), two.hashCode());
 
         ClusterWidgetContent otherSpeed = build(
                 state(61, GearSelector.DRIVE, 3),
                 SpeedDisplayMode.REAL,
-                80,
-                TransmissionTemperatureAlert.Level.NORMAL);
+                80);
         assertFalse(one.equals(otherSpeed));
+
+        ClusterWidgetContent otherBattery = build(
+                first,
+                SpeedDisplayMode.REAL,
+                80,
+                21);
+        assertFalse(one.equals(otherBattery));
     }
 }

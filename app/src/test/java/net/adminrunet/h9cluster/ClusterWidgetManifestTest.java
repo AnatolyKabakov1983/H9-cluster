@@ -49,6 +49,25 @@ public final class ClusterWidgetManifestTest {
         assertEquals("false", service.getAttributeNS(ANDROID_NAMESPACE, "exported"));
     }
 
+    @Test
+    public void mainScreenPanelOverlayPermissionIsDeclared() throws Exception {
+        File manifest = new File("src/main/AndroidManifest.xml");
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        NodeList permissions = factory.newDocumentBuilder()
+                .parse(manifest)
+                .getElementsByTagName("uses-permission");
+        for (int index = 0; index < permissions.getLength(); index++) {
+            Element permission = (Element) permissions.item(index);
+            if ("android.permission.SYSTEM_ALERT_WINDOW".equals(
+                    permission.getAttributeNS(ANDROID_NAMESPACE, "name"))) {
+                return;
+            }
+        }
+        throw new AssertionError(
+                "Missing SYSTEM_ALERT_WINDOW for the main-screen panel");
+    }
+
     private static Element findReceiver(String name) throws Exception {
         return findComponent("receiver", name);
     }

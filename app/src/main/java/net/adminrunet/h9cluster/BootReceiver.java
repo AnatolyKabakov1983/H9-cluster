@@ -48,6 +48,11 @@ public final class BootReceiver extends BroadcastReceiver {
                     // Widgets on the main display resume their 1 Hz updates
                     // even when the cluster itself stays on the stock skin.
                     ClusterWidgetService.ensureStarted(applicationContext);
+                    // The floating panel over the factory main screen is the
+                    // head-unit replacement for the widget; it restores only
+                    // when the user left it on screen.
+                    ClusterWidgetService.restorePanelAfterBoot(
+                            applicationContext);
                     pendingResult.finish();
                     return;
                 }

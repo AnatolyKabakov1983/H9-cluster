@@ -21,8 +21,10 @@ public final class ClusterWidgetContent {
 
     public final String rangeText;
     public final String coolantText;
-    public final String atfText;
-    public final TransmissionTemperatureAlert.Level atfLevel;
+    /** Charge level of the 12 V battery in percent digits, or the dash. */
+    public final String batteryPercentText;
+    /** True when the charge level is valid and at or below the low mark. */
+    public final boolean batteryLow;
     public final String outsideText;
     public final String voltageText;
 
@@ -53,8 +55,8 @@ public final class ClusterWidgetContent {
             boolean fuelLow,
             String rangeText,
             String coolantText,
-            String atfText,
-            TransmissionTemperatureAlert.Level atfLevel,
+            String batteryPercentText,
+            boolean batteryLow,
             String outsideText,
             String voltageText,
             String instantConsumptionText,
@@ -79,10 +81,8 @@ public final class ClusterWidgetContent {
         this.fuelLow = fuelLow;
         this.rangeText = rangeText;
         this.coolantText = coolantText;
-        this.atfText = atfText;
-        this.atfLevel = atfLevel == null
-                ? TransmissionTemperatureAlert.Level.NORMAL
-                : atfLevel;
+        this.batteryPercentText = batteryPercentText;
+        this.batteryLow = batteryLow;
         this.outsideText = outsideText;
         this.voltageText = voltageText;
         this.instantConsumptionText = instantConsumptionText;
@@ -118,8 +118,8 @@ public final class ClusterWidgetContent {
                 && Objects.equals(fuelPercentText, that.fuelPercentText)
                 && Objects.equals(rangeText, that.rangeText)
                 && Objects.equals(coolantText, that.coolantText)
-                && Objects.equals(atfText, that.atfText)
-                && atfLevel == that.atfLevel
+                && Objects.equals(batteryPercentText, that.batteryPercentText)
+                && batteryLow == that.batteryLow
                 && Objects.equals(outsideText, that.outsideText)
                 && Objects.equals(voltageText, that.voltageText)
                 && Objects.equals(
@@ -161,8 +161,8 @@ public final class ClusterWidgetContent {
                 fuelLow,
                 rangeText,
                 coolantText,
-                atfText,
-                atfLevel,
+                batteryPercentText,
+                batteryLow,
                 outsideText,
                 voltageText,
                 instantConsumptionText,

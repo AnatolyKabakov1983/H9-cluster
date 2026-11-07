@@ -15,8 +15,8 @@ import java.util.Locale;
  * {@code km}, {@code L} and {@code V} exactly as the skins draw them.</p>
  */
 public final class ClusterWidgetFormatter {
-    /** Matches the 15-second ATF card policy shared by all skins. */
-    public static final long TRANSMISSION_TEMPERATURE_FRESH_MS = 15_000L;
+    /** Battery charge level at or below which the readout turns red. */
+    public static final int BATTERY_LOW_PERCENT = 20;
 
     /** Fuel percentage at or below which the liters readout turns red. */
     public static final int FUEL_LOW_PERCENT = 15;
@@ -37,15 +37,15 @@ public final class ClusterWidgetFormatter {
      * @param state raw source snapshot; fuel is projected onto the selected
      *              tank size here so every caller sees identical liters
      * @param mode  shared speedometer indication mode
-     * @param atfLevel warning band of the transmission temperature; the
-     *                 hysteresis lives with the owning service
+     * @param batteryPercent charge level of the 12 V battery in percent,
+     *                 or a negative value when the platform reports none
      * @param nowMs elapsedRealtime() reference for staleness decisions
      */
     public static ClusterWidgetContent build(
             ClusterState state,
             SpeedDisplayMode mode,
             int fuelTankCapacityLiters,
-            TransmissionTemperatureAlert.Level atfLevel,
+            int batteryPercent,
             long nowMs) {
         ClusterState normalized = state == null
                 ? ClusterState.empty()
@@ -64,10 +64,8 @@ public final class ClusterWidgetFormatter {
                 fuelLow(normalized),
                 range(normalized),
                 coolant(normalized),
-                transmissionTemperature(normalized, nowMs),
-                atfLevel == null
-                        ? TransmissionTemperatureAlert.Level.NORMAL
-                        : atfLevel,
+                batteryPercentText(batteryPercent),
+                batteryLow(batteryPercent),
                 outsideTemperature(normalized),
                 voltage(normalized),
                 FuelConsumptionFormatter.instant(normalized),
@@ -84,17 +82,6 @@ public final class ClusterWidgetFormatter {
                 torque(normalized),
                 driveMode(normalized),
                 wheelSpeeds(normalized));
-    }
-
-    /** Same freshness rule the service applies to the warning band. */
-    public static boolean hasFreshTransmissionTemperature(
-            ClusterState state,
-            long nowMs) {
-        return state.hasTransmissionTemperature()
-                && state.transmissionTemperatureUpdatedAtMs > 0L
-                && nowMs >= state.transmissionTemperatureUpdatedAtMs
-                && nowMs - state.transmissionTemperatureUpdatedAtMs
-                        <= TRANSMISSION_TEMPERATURE_FRESH_MS;
     }
 
     private static String speed(
@@ -163,12 +150,20 @@ public final class ClusterWidgetFormatter {
                 : DASH;
     }
 
-    private static String transmissionTemperature(
-            ClusterState state,
-            long nowMs) {
-        return hasFreshTransmissionTemperature(state, nowMs)
-                ? Math.round(state.transmissionTemperatureC) + " °C"
+    /** Percent digits for the 12 V battery level; the dash when unknown. */
+    static String batteryPercentText(int batteryPercent) {
+        return isValidBatteryPercent(batteryPercent)
+                ? Integer.toString(batteryPercent)
                 : DASH;
+    }
+
+    static boolean batteryLow(int batteryPercent) {
+        return isValidBatteryPercent(batteryPercent)
+                && batteryPercent <= BATTERY_LOW_PERCENT;
+    }
+
+    private static boolean isValidBatteryPercent(int batteryPercent) {
+        return batteryPercent >= 0 && batteryPercent <= 100;
     }
 
     private static String outsideTemperature(ClusterState state) {
